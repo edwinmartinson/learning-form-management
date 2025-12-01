@@ -7,18 +7,24 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import type { Dispatch, SetStateAction } from "react";
+import type { FormSchema } from "@/zod";
 
-export default function CardModal() {
+type Props = {
+  showCard: boolean;
+  setShowCard: Dispatch<SetStateAction<boolean>>;
+  details: FormSchema | null;
+};
+
+export default function CardModal(props: Props) {
   return (
-    <AlertDialog open>
-      <AlertDialogTrigger>Open</AlertDialogTrigger>
+    <AlertDialog open={props.showCard}>
       <AlertDialogContent className="sm:max-w-sm">
         <div className="bg-muted grid size-10 place-content-center rounded-lg">
           <User className="stroke-primary" />
@@ -26,41 +32,62 @@ export default function CardModal() {
 
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
-            <span>Edwin Martinson</span>
-            {/*<BriefcaseBusiness className="stroke-muted-foreground" size={16} />*/}
+            <span>
+              {props.details?.firstName + " " + props.details?.lastName}
+            </span>
 
-            <Tooltip>
-              <TooltipTrigger>
-                <GraduationCap className="stroke-muted-foreground" size={16} />
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>UNION SYSTEM GLOBAL</p>
-              </TooltipContent>
-            </Tooltip>
+            {props.details &&
+              props.details.experience.status === "employed" && (
+                <Tooltip>
+                  <TooltipTrigger>
+                    <BriefcaseBusiness
+                      className="stroke-muted-foreground"
+                      size={16}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{props.details.experience.company}</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+
+            {props.details && props.details.experience.status === "student" && (
+              <Tooltip>
+                <TooltipTrigger>
+                  <GraduationCap
+                    className="stroke-muted-foreground"
+                    size={16}
+                  />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{props.details.experience.school}</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
           </AlertDialogTitle>
           <AlertDialogDescription>
-            edwinotumartinson@outlook.com
+            {props.details?.email}
           </AlertDialogDescription>
         </AlertDialogHeader>
 
         <div className="flex flex-wrap gap-2">
-          <div className="bg-primary rounded-lg px-2.5 py-0.5 text-sm font-medium">
-            TypeScript
-          </div>
-          <div className="bg-primary rounded-lg px-2.5 py-0.5 text-sm font-medium">
-            JavaScript
-          </div>
-          <div className="bg-primary rounded-lg px-2.5 py-0.5 text-sm font-medium">
-            React.JS
-          </div>
-
-          <div className="bg-primary rounded-lg px-2.5 py-0.5 text-sm font-medium">
-            Node.JS
-          </div>
+          {props.details?.stack.map((stack, index) => (
+            <div
+              key={index}
+              className="bg-primary rounded-lg px-2.5 py-0.5 text-sm font-medium"
+            >
+              {stack.technology}
+            </div>
+          ))}
         </div>
 
         <AlertDialogFooter>
-          <AlertDialogCancel className="w-full">Close</AlertDialogCancel>
+          <AlertDialogCancel
+            className="w-full"
+            onClick={() => props.setShowCard(false)}
+          >
+            Close
+          </AlertDialogCancel>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
