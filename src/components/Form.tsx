@@ -59,7 +59,7 @@ export default function Form() {
     form.store,
     (state) => state.values.experience.status,
   );
-  const isSubmitting = form.state.isSubmitting;
+  const isSubmitting = useStore(form.store, (state) => state.isSubmitting);
 
   return (
     <>
@@ -307,7 +307,7 @@ export default function Form() {
                           type="text"
                           id={field.name}
                           name={field.name}
-                          value={field.state.value}
+                          value={field.state.value ?? ""}
                           onBlur={field.handleBlur}
                           onChange={(e) => field.handleChange(e.target.value)}
                           aria-invalid={isInvalid}
@@ -336,7 +336,7 @@ export default function Form() {
                           type="text"
                           id={field.name}
                           name={field.name}
-                          value={field.state.value}
+                          value={field.state.value ?? ""}
                           onBlur={field.handleBlur}
                           onChange={(e) => field.handleChange(e.target.value)}
                           aria-invalid={isInvalid}
