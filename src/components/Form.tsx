@@ -1,12 +1,5 @@
 import { Loader2, Plus, Trash2 } from "lucide-react";
-import {
-  Controller,
-  useFieldArray,
-  useForm,
-  type SubmitHandler,
-} from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-
+import { useForm, useStore } from "@tanstack/react-form";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -41,7 +34,7 @@ export default function Form() {
   const [showCard, setShowCard] = useState<boolean>(false);
   const [details, setDetails] = useState<FormSchema | null>(null);
 
-  const form = useForm<FormSchema>({
+  const form = useForm({
     defaultValues: {
       firstName: "",
       lastName: "",
@@ -49,25 +42,24 @@ export default function Form() {
       email: "",
       stack: [{ technology: "" }],
       experience: { status: "unemployed" },
+    } satisfies FormSchema as FormSchema,
+    validators: {
+      onChange: formSchema,
     },
-    resolver: zodResolver(formSchema),
+    onSubmit: async ({ value, formApi }) => {
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      setDetails(value);
+      setShowCard(true);
+      formApi.reset();
+      toast.success("Registration successful.");
+    },
   });
 
-  const stack = useFieldArray({
-    control: form.control,
-    name: "stack",
-  });
-
-  const experienceStatus = form.watch("experience.status");
-  const isSubmitting = form.formState.isSubmitting;
-
-  const action: SubmitHandler<FormSchema> = async (data) => {
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-    form.reset();
-    setDetails(data);
-    setShowCard(true);
-    toast.success("Registration successful.");
-  };
+  const experienceStatus = useStore(
+    form.store,
+    (state) => state.values.experience.status,
+  );
+  const isSubmitting = form.state.isSubmitting;
 
   return (
     <>
@@ -76,7 +68,7 @@ export default function Form() {
         setShowCard={setShowCard}
         details={details}
       />
-      <form onSubmit={form.handleSubmit(action)}>
+      <form action={form.handleSubmit}>
         <FieldGroup>
           <FieldSet disabled={isSubmitting}>
             <FieldLegend>Personal Details</FieldLegend>
@@ -84,252 +76,308 @@ export default function Form() {
 
             <FieldGroup>
               <FieldGroup className="flex-row">
-                <Controller
-                  control={form.control}
+                <form.Field
                   name="firstName"
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor={field.name}>First name</FieldLabel>
-                      <Input
-                        {...field}
-                        id={field.name}
-                        placeholder="eg: Heylow"
-                        aria-invalid={fieldState.invalid}
-                      />
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
-                    </Field>
-                  )}
+                  children={(field) => {
+                    const { isTouched, isValid, errors } = field.state.meta;
+                    const isInvalid = isTouched && !isValid;
+
+                    return (
+                      <Field data-invalid={isInvalid}>
+                        <FieldLabel htmlFor={field.name}>First name</FieldLabel>
+                        <Input
+                          type="text"
+                          id={field.name}
+                          name={field.name}
+                          value={field.state.value}
+                          onBlur={field.handleBlur}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          aria-invalid={isInvalid}
+                          placeholder="eg: Hello"
+                        />
+                        {isInvalid && <FieldError errors={errors} />}
+                      </Field>
+                    );
+                  }}
                 />
 
-                <Controller
-                  control={form.control}
+                <form.Field
                   name="lastName"
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor={field.name}>Last name</FieldLabel>
-                      <Input
-                        {...field}
-                        id={field.name}
-                        placeholder="eg: Heylow"
-                        aria-invalid={fieldState.invalid}
-                      />
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
-                    </Field>
-                  )}
+                  children={(field) => {
+                    const { isTouched, isValid, errors } = field.state.meta;
+                    const isInvalid = isTouched && !isValid;
+
+                    return (
+                      <Field data-invalid={isInvalid}>
+                        <FieldLabel htmlFor={field.name}>Last name</FieldLabel>
+                        <Input
+                          type="text"
+                          id={field.name}
+                          name={field.name}
+                          value={field.state.value}
+                          onBlur={field.handleBlur}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          aria-invalid={isInvalid}
+                          placeholder="eg: World"
+                        />
+                        {isInvalid && <FieldError errors={errors} />}
+                      </Field>
+                    );
+                  }}
                 />
               </FieldGroup>
 
               <FieldGroup className="flex-row">
-                <Controller
-                  control={form.control}
+                <form.Field
                   name="dateOfBirth"
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor={field.name}>
-                        Date Of Birth
-                      </FieldLabel>
-                      <Input
-                        {...field}
-                        type="date"
-                        id={field.name}
-                        aria-invalid={fieldState.invalid}
-                      />
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
-                    </Field>
-                  )}
+                  children={(field) => {
+                    const { isTouched, isValid, errors } = field.state.meta;
+                    const isInvalid = isTouched && !isValid;
+
+                    return (
+                      <Field data-invalid={isInvalid}>
+                        <FieldLabel htmlFor={field.name}>
+                          Date of Birth
+                        </FieldLabel>
+                        <Input
+                          type="date"
+                          id={field.name}
+                          name={field.name}
+                          value={field.state.value}
+                          onBlur={field.handleBlur}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          aria-invalid={isInvalid}
+                          placeholder="eg: 01/01/2000"
+                        />
+                        {isInvalid && <FieldError errors={errors} />}
+                      </Field>
+                    );
+                  }}
                 />
 
-                <Controller
-                  control={form.control}
+                <form.Field
                   name="email"
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor={field.name}>Email</FieldLabel>
-                      <Input
-                        {...field}
-                        id={field.name}
-                        placeholder="eg: example@exg.com"
-                        aria-invalid={fieldState.invalid}
-                      />
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
-                    </Field>
-                  )}
+                  children={(field) => {
+                    const { isTouched, isValid, errors } = field.state.meta;
+                    const isInvalid = isTouched && !isValid;
+
+                    return (
+                      <Field data-invalid={isInvalid}>
+                        <FieldLabel htmlFor={field.name}>Email</FieldLabel>
+                        <Input
+                          type="email"
+                          id={field.name}
+                          name={field.name}
+                          value={field.state.value}
+                          onBlur={field.handleBlur}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          aria-invalid={isInvalid}
+                          placeholder="eg: hello@world.com"
+                        />
+                        {isInvalid && <FieldError errors={errors} />}
+                      </Field>
+                    );
+                  }}
                 />
               </FieldGroup>
             </FieldGroup>
           </FieldSet>
 
-          <FieldSet disabled={isSubmitting}>
-            <FieldLegend>Tech Stack</FieldLegend>
-            <FieldDescription>Tell us about your tech stack.</FieldDescription>
-            {form.formState.errors.stack?.root && (
-              <FieldError errors={[form.formState.errors.stack.root]} />
+          <form.Field
+            name="stack"
+            mode="array"
+            children={(stackFields) => (
+              <FieldSet disabled={isSubmitting}>
+                <FieldLegend>Tech Stack</FieldLegend>
+                <FieldDescription>
+                  Tell us about your tech stack.
+                </FieldDescription>
+
+                <FieldGroup className="gap-3">
+                  {stackFields.state.value.map((_, index) => (
+                    <form.Field
+                      key={index}
+                      name={`stack[${index}].technology`}
+                      children={(field) => {
+                        const { isTouched, isValid, errors } = field.state.meta;
+                        const isInvalid = isTouched && !isValid;
+
+                        return (
+                          <Field>
+                            <InputGroup>
+                              <InputGroupInput
+                                type="text"
+                                id={field.name}
+                                name={field.name}
+                                value={field.state.value}
+                                onBlur={field.handleBlur}
+                                onChange={(e) =>
+                                  field.handleChange(e.target.value)
+                                }
+                                aria-invalid={isInvalid}
+                                placeholder="eg: JavaScript"
+                              />
+                              <InputGroupAddon align={"inline-end"}>
+                                <InputGroupButton
+                                  size={"icon-sm"}
+                                  onClick={() => stackFields.removeValue(index)}
+                                >
+                                  <Trash2 className="stroke-destructive" />
+                                </InputGroupButton>
+                              </InputGroupAddon>
+                            </InputGroup>
+
+                            {isInvalid && <FieldError errors={errors} />}
+                          </Field>
+                        );
+                      }}
+                    />
+                  ))}
+
+                  <Button
+                    type="button"
+                    variant={"outline"}
+                    className="w-fit"
+                    onClick={() => stackFields.pushValue({ technology: "" })}
+                  >
+                    <Plus />
+                    <span>Add</span>
+                  </Button>
+                </FieldGroup>
+              </FieldSet>
             )}
-            <FieldGroup className="gap-3">
-              {stack.fields.map((item, index) => (
-                <Controller
-                  key={item.id}
-                  control={form.control}
-                  name={`stack.${index}.technology`}
-                  render={({ field, fieldState }) => (
-                    <Field>
-                      <InputGroup>
-                        <InputGroupInput
-                          {...field}
-                          id={field.name}
-                          placeholder="eg: JavaScript"
-                          aria-invalid={fieldState.invalid}
-                        />
-                        <InputGroupAddon align={"inline-end"}>
-                          <InputGroupButton
-                            size={"icon-sm"}
-                            onClick={() => stack.remove(index)}
-                          >
-                            <Trash2 className="stroke-destructive" />
-                          </InputGroupButton>
-                        </InputGroupAddon>
-                      </InputGroup>
-
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
-                    </Field>
-                  )}
-                />
-              ))}
-
-              <Button
-                type="button"
-                variant={"outline"}
-                className="w-fit"
-                onClick={() => stack.append({ technology: "" })}
-              >
-                <Plus />
-                <span>Add</span>
-              </Button>
-            </FieldGroup>
-          </FieldSet>
+          />
 
           <FieldSet disabled={isSubmitting}>
             <FieldLegend>Experience</FieldLegend>
             <FieldDescription>Tell us about your experience.</FieldDescription>
 
             <FieldGroup className="gap-3">
-              <Controller
-                control={form.control}
+              <form.Field
                 name="experience.status"
-                render={({
-                  field: { onChange, onBlur, ...field },
-                  fieldState,
-                }) => (
-                  <Field>
-                    <FieldLabel>What best describes you?</FieldLabel>
-                    <Select
-                      {...field}
-                      name={field.name}
-                      onValueChange={onChange}
-                    >
-                      <SelectTrigger
-                        className="w-full"
-                        onBlur={onBlur}
-                        id={field.name}
-                        aria-invalid={fieldState.invalid}
-                      >
-                        <SelectValue placeholder="Select an option" />
-                      </SelectTrigger>
+                children={(field) => {
+                  const { isTouched, isValid, errors } = field.state.meta;
+                  const isInvalid = isTouched && !isValid;
 
-                      <SelectContent id={field.name}>
-                        <SelectItem value="unemployed">Unemployed</SelectItem>
-                        <SelectItem value="employed">Employed</SelectItem>
-                        <SelectItem value="student">Student</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </Field>
-                )}
+                  return (
+                    <Field>
+                      <FieldLabel>What best describes you?</FieldLabel>
+                      <Select
+                        name={field.name}
+                        onValueChange={(
+                          e: FormSchema["experience"]["status"],
+                        ) => field.handleChange(e)}
+                      >
+                        <SelectTrigger
+                          className="w-full"
+                          id={field.name}
+                          value={field.state.value}
+                          onBlur={field.handleBlur}
+                          aria-invalid={isInvalid}
+                        >
+                          <SelectValue placeholder="Select an option" />
+                        </SelectTrigger>
+
+                        <SelectContent id={field.name}>
+                          <SelectItem value="unemployed">Unemployed</SelectItem>
+                          <SelectItem value="employed">Employed</SelectItem>
+                          <SelectItem value="student">Student</SelectItem>
+                        </SelectContent>
+                      </Select>
+
+                      {isInvalid && <FieldError errors={errors} />}
+                    </Field>
+                  );
+                }}
               />
 
               {experienceStatus === "employed" && (
-                <Controller
-                  control={form.control}
+                <form.Field
                   name="experience.company"
-                  render={({ field: { value, ...field }, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor={field.name}>
-                        Name Of Company
-                      </FieldLabel>
-                      <Input
-                        {...field}
-                        value={value ?? ""}
-                        id={field.name}
-                        placeholder="eg: Microsoft"
-                        aria-invalid={fieldState.invalid}
-                      />
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
-                    </Field>
-                  )}
+                  children={(field) => {
+                    const { isTouched, isValid, errors } = field.state.meta;
+                    const isInvalid = isTouched && !isValid;
+
+                    return (
+                      <Field data-invalid={isInvalid}>
+                        <FieldLabel htmlFor={field.name}>
+                          Name Of Company
+                        </FieldLabel>
+                        <Input
+                          type="text"
+                          id={field.name}
+                          name={field.name}
+                          value={field.state.value}
+                          onBlur={field.handleBlur}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          aria-invalid={isInvalid}
+                          placeholder="eg: Microsoft"
+                        />
+                        {isInvalid && <FieldError errors={errors} />}
+                      </Field>
+                    );
+                  }}
                 />
               )}
 
               {experienceStatus === "student" && (
-                <Controller
-                  control={form.control}
+                <form.Field
                   name="experience.school"
-                  render={({ field: { value, ...field }, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor={field.name}>
-                        Name Of School
-                      </FieldLabel>
-                      <Input
-                        {...field}
-                        value={value ?? ""}
-                        id={field.name}
-                        placeholder="eg: Greenwich University"
-                        aria-invalid={fieldState.invalid}
-                      />
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
-                    </Field>
-                  )}
+                  children={(field) => {
+                    const { isTouched, isValid, errors } = field.state.meta;
+                    const isInvalid = isTouched && !isValid;
+
+                    return (
+                      <Field data-invalid={isInvalid}>
+                        <FieldLabel htmlFor={field.name}>
+                          Name Of School
+                        </FieldLabel>
+                        <Input
+                          type="text"
+                          id={field.name}
+                          name={field.name}
+                          value={field.state.value}
+                          onBlur={field.handleBlur}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          aria-invalid={isInvalid}
+                          placeholder="eg: Greenwich University"
+                        />
+                        {isInvalid && <FieldError errors={errors} />}
+                      </Field>
+                    );
+                  }}
                 />
               )}
             </FieldGroup>
           </FieldSet>
 
-          {form.formState.errors.root && (
-            <FieldError errors={[form.formState.errors.root]} />
-          )}
+          {form.state.errors && <FieldError errors={form.state.errors} />}
 
           <Field className="grid grid-cols-2">
             <Button
               className="w-full"
-              type="reset"
+              type="button"
               variant={"outline"}
               onClick={() => form.reset()}
             >
               Reset
             </Button>
 
-            <Button className="w-full" type="submit" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="animate-spin" />
-                  <span>Submitting...</span>
-                </>
-              ) : (
-                <span>Register</span>
+            <form.Subscribe
+              selector={(state) => [state.canSubmit, state.isSubmitting]}
+              children={([canSubmit, isSubmitting]) => (
+                <Button className="w-full" type="submit" disabled={!canSubmit}>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="animate-spin" />
+                      <span>Submitting...</span>
+                    </>
+                  ) : (
+                    <span>Register</span>
+                  )}
+                </Button>
               )}
-            </Button>
+            />
           </Field>
         </FieldGroup>
       </form>
